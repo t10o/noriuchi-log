@@ -67,8 +67,8 @@ export function NewSessionForm({ friends, currentUser }: Props) {
         userId: friend.id,
         name: friend.name ?? friend.email ?? "フレンド",
         email: friend.email,
-        invested: 0,
-        payout: 0,
+        invested: "",
+        payout: "",
       },
     ]);
     setFriendToAdd("");
