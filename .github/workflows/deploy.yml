@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_ENV: production
+      NPM_CONFIG_ALLOW_SCRIPTS: '{"@prisma/engines":true,"prisma":true}'
+      PNPM_ALLOW_SCRIPTS: '{"@prisma/engines":true,"prisma":true}'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +35,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Allow Prisma scripts in pnpm (CI)
+        run: pnpm config set allow-scripts '{"@prisma/engines": true, "prisma": true}'
 
       - name: Lint
         run: pnpm lint
