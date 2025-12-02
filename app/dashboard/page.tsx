@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth, signOut } from "@/auth";
-import { fetchFriends } from "@/entities/friend/queries";
+import { fetchFriends, fetchIncomingFriendRequests } from "@/entities/friend/queries";
 import { fetchSessionsForUser } from "@/entities/nori-session/queries";
 import { DashboardClient } from "@/widgets/dashboard/dashboard-client";
 
@@ -11,9 +11,10 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  const [friends, sessions] = await Promise.all([
+  const [friends, sessions, friendRequests] = await Promise.all([
     fetchFriends(session.user.id),
     fetchSessionsForUser(session.user.id),
+    fetchIncomingFriendRequests(session.user.id),
   ]);
 
   async function handleSignOut() {
@@ -41,6 +42,7 @@ export default async function DashboardPage() {
       <DashboardClient
         sessions={sessions}
         friends={friends}
+        friendRequests={friendRequests}
         currentUser={{
           id: session.user.id,
           name: session.user.name,

@@ -13,8 +13,10 @@ import { format } from "date-fns";
 import { useMemo, useState } from "react";
 
 import type { FriendView } from "@/entities/friend/queries";
+import type { FriendRequestView } from "@/entities/friend/queries";
 import type { NoriSessionView } from "@/entities/nori-session/types";
 import { AddFriendCard } from "@/features/friend/ui/add-friend-card";
+import { FriendRequestsCard } from "@/features/friend/ui/friend-requests-card";
 import { NewSessionForm } from "@/features/nori-session/ui/new-session-form";
 import { Card, CardBody, CardHeader } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
@@ -24,6 +26,7 @@ const currency = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "
 type Props = {
   sessions: NoriSessionView[];
   friends: FriendView[];
+  friendRequests: FriendRequestView[];
   currentUser: {
     id: string;
     name?: string | null;
@@ -34,7 +37,7 @@ type Props = {
 
 type ChartRow = { date: string; net: number; invest: number; payout: number };
 
-export function DashboardClient({ sessions, friends, currentUser }: Props) {
+export function DashboardClient({ sessions, friends, friendRequests, currentUser }: Props) {
   const [friendFilter, setFriendFilter] = useState<string>("");
   const [machineFilter, setMachineFilter] = useState<string>("");
 
@@ -165,7 +168,10 @@ export function DashboardClient({ sessions, friends, currentUser }: Props) {
           </CardBody>
         </Card>
 
-        <AddFriendCard />
+        <div className="space-y-4">
+          <FriendRequestsCard requests={friendRequests} />
+          <AddFriendCard />
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-5">

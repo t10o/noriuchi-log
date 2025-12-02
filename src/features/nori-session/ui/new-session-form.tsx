@@ -14,8 +14,8 @@ type ParticipantRow = {
   userId: string;
   name: string;
   email?: string | null;
-  invested: number;
-  payout: number;
+  invested: string; // 入力をそのまま保持（空文字OK）
+  payout: string;
 };
 
 type Props = {
@@ -33,13 +33,13 @@ export function NewSessionForm({ friends, currentUser }: Props) {
   const [note, setNote] = useState("");
   const [date, setDate] = useState(today);
   const [participants, setParticipants] = useState<ParticipantRow[]>([
-    {
-      userId: currentUser.id,
-      name: currentUser.name ?? "あなた",
-      email: currentUser.email,
-      invested: 0,
-      payout: 0,
-    },
+      {
+        userId: currentUser.id,
+        name: currentUser.name ?? "あなた",
+        email: currentUser.email,
+        invested: "",
+        payout: "",
+      },
   ]);
   const [friendToAdd, setFriendToAdd] = useState<string>("");
   const [message, setMessage] = useState<string>("");
@@ -74,14 +74,8 @@ export function NewSessionForm({ friends, currentUser }: Props) {
     setFriendToAdd("");
   };
 
-  const handleParticipantChange = (
-    userId: string,
-    field: "invested" | "payout",
-    value: number,
-  ) => {
-    setParticipants((prev) =>
-      prev.map((p) => (p.userId === userId ? { ...p, [field]: value } : p)),
-    );
+  const handleParticipantChange = (userId: string, field: "invested" | "payout", value: string) => {
+    setParticipants((prev) => prev.map((p) => (p.userId === userId ? { ...p, [field]: value } : p)));
   };
 
   const handleRemove = (userId: string) => {
@@ -91,6 +85,17 @@ export function NewSessionForm({ friends, currentUser }: Props) {
 
   const handleSubmit = () => {
     setMessage("");
+    // 事前に数値バリデーション
+    const hasInvalid = participants.some((p) => {
+      const inv = p.invested === "" ? 0 : Number(p.invested);
+      const pay = p.payout === "" ? 0 : Number(p.payout);
+      return Number.isNaN(inv) || Number.isNaN(pay) || inv < 0 || pay < 0;
+    });
+    if (hasInvalid) {
+      setMessage("金額は0以上の数字で入力してください");
+      return;
+    }
+
     startTransition(async () => {
       const payload = {
         date,
@@ -115,8 +120,8 @@ export function NewSessionForm({ friends, currentUser }: Props) {
             userId: currentUser.id,
             name: currentUser.name ?? "あなた",
             email: currentUser.email,
-            invested: 0,
-            payout: 0,
+            invested: "",
+            payout: "",
           },
         ]);
       } else {
@@ -222,7 +227,7 @@ export function NewSessionForm({ friends, currentUser }: Props) {
                       min={0}
                       step={100}
                       value={p.invested}
-                      onChange={(e) => handleParticipantChange(p.userId, "invested", Number(e.target.value))}
+                      onChange={(e) => handleParticipantChange(p.userId, "invested", e.target.value)}
                       className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white focus:border-fuchsia-300 focus:outline-none"
                     />
                   </label>
@@ -233,7 +238,7 @@ export function NewSessionForm({ friends, currentUser }: Props) {
                       min={0}
                       step={100}
                       value={p.payout}
-                      onChange={(e) => handleParticipantChange(p.userId, "payout", Number(e.target.value))}
+                      onChange={(e) => handleParticipantChange(p.userId, "payout", e.target.value)}
                       className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white focus:border-fuchsia-300 focus:outline-none"
                     />
                   </label>

@@ -9,6 +9,15 @@ export type FriendView = {
   image?: string | null;
 };
 
+export type FriendRequestView = {
+  requestId: string;
+  userId: string;
+  name: string | null;
+  email: string | null;
+  image?: string | null;
+  createdAt: Date;
+};
+
 export async function fetchFriends(userId: string): Promise<FriendView[]> {
   const friendships = await prisma.friendship.findMany({
     where: {
@@ -33,4 +42,24 @@ export async function fetchFriends(userId: string): Promise<FriendView[]> {
 
   const uniqueById = new Map(mapped.map((f) => [f.id, f]));
   return Array.from(uniqueById.values());
+}
+
+export async function fetchIncomingFriendRequests(userId: string): Promise<FriendRequestView[]> {
+  const requests = await prisma.friendship.findMany({
+    where: {
+      status: FriendshipStatus.PENDING,
+      friendId: userId,
+    },
+    include: { user: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return requests.map((r) => ({
+    requestId: r.id,
+    userId: r.userId,
+    name: r.user?.name ?? "匿名",
+    email: r.user?.email ?? "",
+    image: r.user?.image ?? undefined,
+    createdAt: r.createdAt,
+  }));
 }
