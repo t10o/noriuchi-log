@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Noriuchi Log
 
-## Getting Started
+パチンコ・パチスロのノリ打ち収支を共有する Next.js + Prisma + Auth.js プロジェクト。
 
-First, run the development server:
+## 環境変数
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+`.env` に最低限以下を設定してください（`.env.local` は Prisma CLI が読み込まない点に注意）。
+
+```
+DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
+SHADOW_DATABASE_URL=postgresql://user:pass@host/shadow?sslmode=require
+AUTH_SECRET=ランダム32文字以上
+AUTH_GOOGLE_ID=...
+AUTH_GOOGLE_SECRET=...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## DB / Prisma 運用手順
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 依存インストール: `pnpm install`
+- Prisma クライアント生成（環境変数をセットした状態で）: `pnpm prisma generate`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 開発（Neon development ブランチ想定）
+1. `.env` を開発用 `DATABASE_URL` と `SHADOW_DATABASE_URL` に設定（shadow は必ず別ブランチ/DB）。
+2. スキーマ変更後にマイグレーション作成＋適用:
+   ```bash
+   pnpm prisma migrate dev --name <change>
+   ```
+   これで `prisma/migrations` が更新され、development + shadow に適用されます。
 
-## Learn More
+### 本番適用（Neon production ブランチ想定）
+1. `.env` もしくはデプロイ環境の `DATABASE_URL` を production ブランチにセット。
+2. 既存マイグレーションを適用:
+   ```bash
+   pnpm prisma migrate deploy
+   ```
+   ※ deploy は shadow を使いません。必要なら別途 `SHADOW_DATABASE_URL` を用意しますが必須ではありません。
 
-To learn more about Next.js, take a look at the following resources:
+### ワンライナーで環境を指定して実行したい場合
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+DATABASE_URL=... SHADOW_DATABASE_URL=... pnpm prisma migrate dev --name add_field
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### よくあるエラー
+- `Connection url is empty`: Prisma は `.env.local` を読まないため `DATABASE_URL` が空。`.env` にコピーするか実行時に環境変数を渡してください。
+- `Unknown property datasourceUrl provided to PrismaClient constructor`: Prisma 7 では `datasourceUrl` は廃止。`@prisma/adapter-pg` + `pg` を使った `adapter` 初期化に修正済みです。
 
-## Deploy on Vercel
+## 開発サーバー
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+pnpm dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ビルド
+
+```
+pnpm build
+pnpm start
+```
