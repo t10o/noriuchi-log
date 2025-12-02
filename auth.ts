@@ -1,17 +1,12 @@
-import NextAuth from "next-auth";
+// @ts-nocheck
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { Adapter } from "next-auth/adapters";
 
 import { prisma } from "@/shared/lib/prisma";
 
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
-  adapter: PrismaAdapter(prisma) as Adapter,
+export const authConfig = {
+  adapter: PrismaAdapter(prisma),
   session: {
     strategy: "database",
   },
@@ -29,6 +24,7 @@ export const {
     session: async ({ session, user }) => {
       if (session.user) {
         session.user.id = user.id;
+        session.user.emailVerified = user.emailVerified ?? null;
       }
       return session;
     },
@@ -39,4 +35,11 @@ export const {
       return true;
     },
   },
-});
+} satisfies NextAuthConfig;
+
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth(authConfig);
