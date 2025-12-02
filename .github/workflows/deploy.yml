@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies (allow Prisma scripts)
         run: pnpm install --frozen-lockfile --config.allow-scripts='{"@prisma/engines":true,"prisma":true}'
 
+      - name: Generate Prisma Client
+        run: pnpm exec prisma generate
+
       - name: Lint
         run: pnpm lint
 
@@ -48,6 +51,7 @@ jobs:
       - name: Build (prebuilt output)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          PNPM_CONFIG_ALLOW_SCRIPTS: '{"@prisma/engines":true,"prisma":true}'
         run: pnpm dlx vercel@latest build --prod --token "$VERCEL_TOKEN"
 
       # 本番DBにマイグレーションを適用（失敗したらデプロイしない）
